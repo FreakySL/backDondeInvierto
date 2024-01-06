@@ -10,3 +10,8 @@ loggly-python-handler==1.0.1
 
 # Requests is a popular HTTP library
 requests==2.26.0
+
+# Google Dependencies
+google-auth-httplib2==0.2.0
+google-auth-oauthlib==1.2.0
+google-api-python-client==2.112.0
