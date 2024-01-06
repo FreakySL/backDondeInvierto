@@ -1,0 +1,6 @@
+[run]
+omit =
+    # leave migrations out of coverage report
+    */migrations/*
+    # omit tests
+    tests/*

@@ -1,0 +1,12 @@
+# Basic Python
+ipdb==0.13.9
+pytest==6.2.4
+pytest-cov==3.0.0
+factory-boy==3.2.1
+pytest-mock==3.6.1
+
+# logs
+loggly-python-handler==1.0.1
+
+# Requests is a popular HTTP library
+requests==2.26.0
