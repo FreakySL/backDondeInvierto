@@ -130,13 +130,13 @@ def normalize_amount(value):
     return normal_value
 
 
-def normalize_decimals(value, decimals_to_round, method=ROUND_DOWN):
+def normalize_decimals(value, decimals_to_round=8, method=ROUND_DOWN):
     """
     Normalize decimal value to the decimals given.
 
-    @param value: anything castable to Decimal, original value
-    @param decimals_to_round: Integer, number of decimals to have
-    @param method: str (?), round method to use. not used so far.
+    param value: anything castable to Decimal, original value
+    param decimals_to_round: Integer, number of decimals to have
+    param method: str (?), round method to use. not used so far.
     """
     new_value = value
 

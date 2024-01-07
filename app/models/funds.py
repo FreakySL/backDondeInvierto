@@ -1,3 +1,4 @@
+from datetime import timedelta
 import json
 import requests
 from decimal import Decimal
@@ -8,6 +9,7 @@ from multiprocessing import (
 from ..common.utils import (
     get_logger,
     get_current_time,
+    normalize_decimals,
 )
 
 
@@ -22,20 +24,23 @@ class FundClassParser():
     SHEET = "funds"
     COLUMN_MAX_RANGE = "A1:K"
     BASE_CAFCI_URL = "https://api.cafci.org.ar"
-    FUND_GROUP_CELL_RANGE = "E2:E"
+    FUND_CODES_CELL_RANGE = "D2:E"
+    TEM_MONTHLY_RANGE = "H2:I"
 
     # Create the init
     def __init__(self,):
         pass
 
-    @staticmethod
-    def calculate_tem(self, initial_price: Decimal, final_price: Decimal) -> Decimal:
+    def get_tem(self, initial_price: Decimal, final_price: Decimal) -> Decimal:
         """
         Calculate TEM from data.
         param: initial_price: Decimal
         param: final_price: Decimal
         return: TEM: Decimal
         """
+        if initial_price is None or final_price is None:
+            return None
+
         tem = ((final_price - initial_price) / initial_price) * 100 * 4  # 4 is the number of periods in a month
 
         # Return the TEM
@@ -47,8 +52,11 @@ class FundClassParser():
     def get_sheet(self):
         return self.SHEET
 
-    def get_fund_group_cell_range(self):
-        return self.FUND_GROUP_CELL_RANGE
+    def get_fund_codes_range(self):
+        return self.FUND_CODES_CELL_RANGE
+
+    def get_tem_monthly_range(self):
+        return self.TEM_MONTHLY_RANGE
 
     def get_monthly_performance(self):
         #
@@ -116,3 +124,75 @@ class FundClassParser():
             all_fund_classes.extend(fund_classes)
 
         return all_fund_classes
+
+    def get_seven_days_price(self, class_id, fund_id):
+        """
+        Get the first and last price of the last seven days.
+        """
+        cafci_performance_url = f"{self.BASE_CAFCI_URL}/fondo/{class_id}/clase/{fund_id}/rendimiento/"
+
+        today = get_current_time()
+        one_week_ago = today - timedelta(days=7)
+
+        params = f"{today.strftime('%Y-%m-%d')}/{one_week_ago.strftime('%Y-%m-%d')}"
+        cafci_performance_url = cafci_performance_url + params
+
+        logger.info("Getting cafci performance from %s", cafci_performance_url)
+
+        try:
+
+            cafci_response = requests.get(cafci_performance_url)
+            response = json.loads(cafci_response.data.decode('utf-8'))
+
+            has_errors = response.get('error')  # Possible errors are 'wrong-dates' and 'inexistence'
+            if has_errors:
+                logger.debug(f"Wrong dates for {class_id}/{fund_id} in cafci")
+                return None, None
+
+            returned_elems = response.get('data')
+
+        except Exception as e:
+            logger.error("Error getting cafci performance: %s - status code: %s", e, cafci_response.status_code)
+            return None, None
+
+        # Normalize the shares to avoid problems with the decimal field
+        last_price = normalize_decimals(returned_elems.get('desde').get('valor')) / 1000
+        first_price = normalize_decimals(returned_elems.get('hasta').get('valor')) / 1000
+
+        return first_price, last_price
+
+    def get_last_monthly_performance(self, class_id, fund_id):
+        """
+        Get the last monthly performance.
+        """
+        cafci_performance_url = f"{self.BASE_CAFCI_URL}/fondo/{class_id}/clase/{fund_id}/rendimiento/"
+
+        today = get_current_time()
+        one_month_ago = today - timedelta(days=30)
+
+        params = f"{today.strftime('%Y-%m-%d')}/{one_month_ago.strftime('%Y-%m-%d')}"
+        cafci_performance_url = cafci_performance_url + params
+
+        logger.info("Getting cafci performance from %s", cafci_performance_url)
+
+        try:
+
+            cafci_response = requests.get(cafci_performance_url)
+            response = json.loads(cafci_response.data.decode('utf-8'))
+
+            has_errors = response.get('error')  # Possible errors are 'wrong-dates' and 'inexistence'
+
+            if has_errors:
+                logger.debug(f"Wrong dates for {class_id}/{fund_id} in cafci")
+                return None
+
+            returned_elems = response.get('data')
+
+        except Exception as e:
+            logger.error("Error getting cafci performance: %s - status code: %s", e, cafci_response.status_code)
+            return None
+
+        # Normalize the shares to avoid problems with the decimal field
+        monthly_performance = normalize_decimals(returned_elems.get('rendimiento')) / 1000
+
+        return monthly_performance

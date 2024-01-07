@@ -70,11 +70,32 @@ def update_funds_database():
     parser = FundClassParser()
 
     # Get all fund groups from sheet
-    funds_cafci_code = sheet.get_data(sheet_name=parser.get_sheet(), _range=parser.get_fund_group_cell_range())
-    print(funds_cafci_code)
+    funds_cafci_codes = sheet.get_data(sheet_name=parser.get_sheet(), _range=parser.get_fund_codes_range())
 
-    fund_groups_formated = parse_array_list_to_single_list(funds_cafci_code)
-    print(fund_groups_formated)
+    new_data = []
+
+    for fund_code in funds_cafci_codes:
+        logger.info("Getting data from fund code %s", fund_code)
+        # Get the TEM for the fund
+        first_price, last_price = parser.get_seven_days_price(class_id=fund_code[0], fund_id=fund_code[1])
+
+        # Append the TEM to the new data
+        tem = parser.get_tem(first_price, last_price)
+
+        # Now get the monthly performance
+        monthly_performance = parser.get_last_monthly_performance(class_id=fund_code[0], fund_id=fund_code[1])
+
+        # Append the tem and monthly performance to the new data
+        new_data.append([tem, monthly_performance])
+
+    # Update the sheet database
+    logger.info("Updating sheet database")
+
+    sheet.update_data(
+        values=new_data,
+        sheet_name=parser.get_sheet(),
+        _range=parser.get_tem_monthly_range(),
+    )
 
     end_time = time.time()  # End time annotation
     elapsed_time = end_time - start_time

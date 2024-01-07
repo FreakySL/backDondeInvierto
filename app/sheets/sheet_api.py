@@ -59,7 +59,21 @@ class APISpreadsheet:
             logger.error("Error al actualizar la hoja: %s", error)
             return
 
-        logger.info(f"{response.get('updates').get('updatedCells')} celdas actualizadas")
+    def update_data(self, values, sheet_name="funds", _range=FIST_CELL):
+        try:
+            body = {'values': values}
+            response = self.sheet.values().update(
+                spreadsheetId=self.SPREADSHEET_ID,
+                range=f'{sheet_name}!{_range}',
+                valueInputOption=self.APPEND_CONST,
+                body=body
+            ).execute()
+
+            logger.info(f"{response.get('updatedCells')} cells updated.")
+
+        except HttpError as error:
+            logger.error("Error al actualizar la hoja: %s", error)
+            return
 
     def response_to_dicctionary(self, response):
         dictionary = {}
