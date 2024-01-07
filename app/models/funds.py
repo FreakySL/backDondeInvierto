@@ -25,11 +25,18 @@ class FundClassParser():
     COLUMN_MAX_RANGE = "A1:K"
     BASE_CAFCI_URL = "https://api.cafci.org.ar"
     FUND_CODES_CELL_RANGE = "D2:E"
-    TEM_MONTHLY_RANGE = "H2:I"
+    TEM_MONTHLY_UPDATED_RANGE = "H2:I"
 
     # Create the init
     def __init__(self,):
         pass
+
+    def get_cafci_ficha_default(self):
+        response = requests.get(
+            "https://api.cafci.org.ar/fondo/1222/clase/3924/ficha",
+        )
+
+        return response.status_code == 200
 
     def get_tem(self, initial_price: Decimal, final_price: Decimal) -> Decimal:
         """
@@ -55,8 +62,8 @@ class FundClassParser():
     def get_fund_codes_range(self):
         return self.FUND_CODES_CELL_RANGE
 
-    def get_tem_monthly_range(self):
-        return self.TEM_MONTHLY_RANGE
+    def get_tem_monthly_updated_range(self):
+        return self.TEM_MONTHLY_UPDATED_RANGE
 
     def get_monthly_performance(self):
         #
@@ -84,7 +91,7 @@ class FundClassParser():
 
         return parsed_response
 
-    def get_fund_classes_by_fund_group(self, fund_group_data, create=False):
+    def get_fund_classes_by_fund_group(self, fund_group_data):
         fund_classes = []
         for fund in fund_group_data.get("clase_fondos"):
             class_id = fund_group_data.get('id')
