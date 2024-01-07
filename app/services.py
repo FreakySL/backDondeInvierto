@@ -25,13 +25,25 @@ def create_initial_funds_database():
         return
 
     logger.info("The database is empty")
-    logger.info("Getting all fund groups")
+    logger.info("Getting all funds from cafci")
 
-    # Create all fund groups
-    # fund_groups = parser.create_all_funds()
+    # Get all funds from cafci
+    all_fund_classes = parser.get_all_funds()
 
+    # Divide the funds data in 10 chunks
+    logger.info("Dividing the funds data in 10 chunks")
+    chunks = [all_fund_classes[x:x + 10] for x in range(0, len(all_fund_classes), 10)]
 
+    # Create the initial database
+    logger.info("Creating the initial database")
 
+    for chunk in chunks:
+        sheet.post_data(
+            values=chunk,
+            sheet_name=parser.get_sheet(),
+        )
+
+    logger.info("Initial database created")
 
 
 def update_funds_database():

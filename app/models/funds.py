@@ -72,7 +72,7 @@ class FundClassParser():
 
         return parsed_response
 
-    def get_or_create_fund_classes_by_fund_group(self, fund_group_data, create=False):
+    def get_fund_classes_by_fund_group(self, fund_group_data, create=False):
         fund_classes = []
         for fund in fund_group_data.get("clase_fondos"):
             class_id = fund_group_data.get('id')
@@ -94,30 +94,21 @@ class FundClassParser():
 
             # Crear datos de fondo para la request a nuestra API
 
-            logger.info(f'Creando fondo codigo: {fund_id} - {fund_name}')
+            logger.info(f'Creando data de fondo/codigo: {class_id}/{fund_name}')
 
             # Crear data de fondo ejemplo: [class_id, fund_name, trading_currency, class_cafci_code, fund_cafci_code, rescue_time, risk_level, tne, monthly_performance, updated, logo_url]
             fund_class_data = [class_id, fund_name, trading_currency, class_id, fund_id, rescue_time, risk_level, None, None, updated, None]
 
-            if create:
-                # Crear fondo en nuestra API
-                # return crear_fondo_google_sheet(fund_class_data)
-                return "A"
-            else:
-                fund_classes.append(fund_class_data)
+            fund_classes.append(fund_class_data)
 
         return fund_classes
-
-    def create_all_funds(self):
-        response = self.get_all_fund_groups()
-
-        with Pool(processes=16) as pool:
-            pool.map(self.get_or_create_fund_classes_by_fund_group, response, create=True)
 
     def get_all_funds(self):
         response = self.get_all_fund_groups()
+        all_fund_classes = []
 
         for fund_group in response:
-            fund_classes = self.get_or_create_fund_classes_by_fund_group(fund_group, create=False)
+            fund_classes = self.get_fund_classes_by_fund_group(fund_group)
+            all_fund_classes.extend(fund_classes)
 
-        return fund_classes
+        return all_fund_classes
