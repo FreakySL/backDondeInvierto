@@ -222,12 +222,7 @@ def date_or_today(__date=None):
     return __date
 
 def validate_option(opcion):
-    while True:
-        try:
-            if opcion in [1, 2]:
-                return opcion
-            else:
-                print("Error: Debes ingresar 1 o 2. Intenta nuevamente.")
-                opcion = int(input("Ingresa 1 o 2: "))
-        except ValueError:
-            print("Error: Debes ingresar un valor numérico. Intenta nuevamente.")
+    while (opcion != 1 and opcion != 2):
+        print("Error: Debes ingresar 1 o 2. Intenta nuevamente.")
+        opcion = int(input("Ingresa 1 o 2: "))
+    return
