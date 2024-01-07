@@ -5,7 +5,7 @@ from multiprocessing import (
     Pool,
 )
 
-from common.utils import (
+from ..common.utils import (
     get_logger,
     get_current_time,
 )
@@ -20,7 +20,7 @@ class FundClassParser():
     | class | fund_name | trading_currency | class_cafci_code | fund_cafci_code | rescue_time | risk_level | tne | monthly_performance | updated | logo_url
     """
     SHEET = "funds"
-    COLUMN_MAX_RANGE = "J"
+    COLUMN_MAX_RANGE = "A1:K"
     BASE_CAFCI_URL = "https://api.cafci.org.ar"
 
     # Create the init
@@ -101,7 +101,8 @@ class FundClassParser():
 
             if create:
                 # Crear fondo en nuestra API
-                return crear_fondo_google_sheet(fund_class_data)
+                # return crear_fondo_google_sheet(fund_class_data)
+                return "A"
             else:
                 fund_classes.append(fund_class_data)
 

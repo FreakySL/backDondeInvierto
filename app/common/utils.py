@@ -18,9 +18,44 @@ from .constants import (
 )
 from .exceptions import ParameterError
 
+import logging.config
+
+LOGGING_CONFIG = {
+    'version': 1,
+    'disable_existing_loggers': True,
+    'formatters': {
+        'standard': {
+            'format': '%(asctime)s [%(levelname)s] %(name)s: %(message)s'
+        },
+    },
+    'handlers': {
+        'default': {
+            'level': 'INFO',
+            'formatter': 'standard',
+            'class': 'logging.StreamHandler',
+            'stream': 'ext://sys.stdout',  # Default is stderr
+        },
+    },
+    'loggers': {
+        '': {  # root logger
+            'handlers': ['default', ],
+            'level': 'DEBUG',
+            'propagate': False
+        },
+        'error': {
+            'handlers': ['default', ],
+            'level': 'WARNING',
+            'propagate': False
+        },
+    }
+}
+
+logging.config.dictConfig(LOGGING_CONFIG)
+
 
 def get_logger(name):
     """Get and return logger with given name."""
+
     if not name:
         raise Exception("Need to provide a name for the logger")
     return logging.getLogger(name)

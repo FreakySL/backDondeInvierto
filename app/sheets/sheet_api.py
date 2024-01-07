@@ -8,7 +8,6 @@ from ..common.utils import (
     get_current_time,
 )
 
-
 logger = get_logger(__name__)
 
 
@@ -30,6 +29,7 @@ class APISpreadsheet:
     def get_all_rows(self, sheet_name="funds", _range="A1:K"):
         result = self.sheet.values().get(spreadsheetId=self.SPREADSHEET_ID, range=f'{sheet_name}!{_range}').execute()
         array_rows = result.get('values', [])
+        print(f"Obtenidos {len(array_rows)} datos de la hoja {sheet_name}")
         return array_rows
 
     def post_fund(self, values, sheet_name="funds", _range=FIST_CELL):
@@ -39,7 +39,8 @@ class APISpreadsheet:
             valueInputOption=self.APPEND_CONST,
             body={'values': values}
         ).execute()
-        logger.info(f"Datos insertados correctamente.\n{(response.get('updates').get('updatedCells'))}")
+
+        print(f"{response.get('updates').get('updatedCells')} celdas actualizadas")
 
     def response_to_dicctionary(self, response):
         dictionary = {}
@@ -69,11 +70,14 @@ class APISpreadsheet:
 
     def find_new_funds(self, array_row, dictionary):
         new_funds_array = []
+
         for x in array_row:
+
             if x[3] in dictionary:
                 continue
+
             else:
-                logger.info("Found new fund ID: %s", x[3])
+                print("Found new fund ID: %s", x[3])
                 new_funds_array.append(x)
 
         return new_funds_array
@@ -83,4 +87,4 @@ def test_format_dict():
     api = APISpreadsheet()
     response = api.get_all_rows()
     dictionary = api.response_to_dicctionary(response)
-    logger.info(dictionary)
+    print(dictionary)
