@@ -103,3 +103,26 @@ def update_funds_database():
     elapsed_time = end_time - start_time
     logger.info("Database updated")
     logger.info(f"Elapsed time: {elapsed_time} seconds")
+
+
+def search_fund_by_name():
+    """
+    Search a fund by name.
+    """
+    fund_name = input("Ingrese el nombre del fondo: ")  # Santander Ahorro PESOS
+    logger.info("Searching fund by name %s", fund_name)
+    sheet = APISpreadsheet()
+
+    # Get all funds from our database
+    funds = sheet.get_all_rows_formated()  # {"2942": {"name": "Santander"}}
+    # search the fund by name
+    logger.info("Searching fund by name %s", fund_name)
+    fund_name = fund_name.lower()
+    for fund in funds:
+        if fund_name == funds[fund]["name"].lower():
+            logger.info("Fund %s found", fund_name)
+            logger.info("Fund data: %s", funds[fund])
+            return funds[fund]
+
+    logger.info("Fund %s not found", fund_name)
+    return None

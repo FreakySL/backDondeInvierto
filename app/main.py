@@ -6,6 +6,7 @@ from .common.utils import (
 from .services import (
     create_initial_funds_database,
     update_funds_database,
+    search_fund_by_name,
 )
 
 
@@ -15,6 +16,7 @@ if __name__ == '__main__':
     # Give to the user 2 options, create the initial funds database or update it
     print("1. Create initial funds database")
     print("2. Update funds database")
+    print("3. Search fund by name")
     option = input("Select an option: ")
 
     option = validate_option(option)
@@ -22,6 +24,7 @@ if __name__ == '__main__':
     switcher = {
         "1": create_initial_funds_database,
         "2": update_funds_database,
+        "3": search_fund_by_name,
     }
 
     # Get the function from switcher dictionary
