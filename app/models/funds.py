@@ -22,6 +22,7 @@ class FundClassParser():
     SHEET = "funds"
     COLUMN_MAX_RANGE = "A1:K"
     BASE_CAFCI_URL = "https://api.cafci.org.ar"
+    FUND_GROUP_CELL_RANGE = "E2:E"
 
     # Create the init
     def __init__(self,):
@@ -45,6 +46,9 @@ class FundClassParser():
 
     def get_sheet(self):
         return self.SHEET
+
+    def get_fund_group_cell_range(self):
+        return self.FUND_GROUP_CELL_RANGE
 
     def get_monthly_performance(self):
         #

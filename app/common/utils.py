@@ -226,3 +226,24 @@ def validate_option(opcion):
         print("Error: Debes ingresar 1 o 2. Intenta nuevamente.")
         opcion = int(input("Ingresa 1 o 2: "))
     return
+
+
+def parse_array_list_to_single_list(array_list):
+    """
+    Flatten a list of arrays into a single list with unique elements.
+
+    Parameters:
+    - array_list (list): A list of arrays.
+
+    Returns:
+    - list: A single list with unique elements.
+    """
+    unique_elements = set()
+    result_list = []
+
+    for array in array_list:
+        unique_elements.update(array)
+
+    result_list.extend(unique_elements)
+
+    return result_list

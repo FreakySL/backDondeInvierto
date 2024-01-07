@@ -27,7 +27,7 @@ class APISpreadsheet:
         self.service = build(self.GOOGLE_API, self.GOOGLE_API_VERSION, credentials=self.creds)
         self.sheet = self.service.spreadsheets()
 
-    def get_all_rows(self, sheet_name="funds", _range="A1:K"):
+    def get_data(self, sheet_name="funds", _range="A1:K"):
         try:
             result = self.sheet.values().get(
                 spreadsheetId=self.SPREADSHEET_ID,
@@ -83,7 +83,7 @@ class APISpreadsheet:
         return dictionary
 
     def get_all_rows_formated(self):
-        response = self.get_all_rows()
+        response = self.get_data()
         dictionary = self.response_to_dicctionary(response)
         return dictionary
 
@@ -104,6 +104,6 @@ class APISpreadsheet:
 
 def test_format_dict():
     api = APISpreadsheet()
-    response = api.get_all_rows()
+    response = api.get_data()
     dictionary = api.response_to_dicctionary(response)
     logger.info(dictionary)

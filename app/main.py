@@ -17,7 +17,7 @@ if __name__ == '__main__':
     print("2. Update funds database")
     option = input("Select an option: ")
 
-    validate_option(option)
+    # validate_option(option)
 
     switcher = {
         "1": create_initial_funds_database,
