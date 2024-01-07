@@ -19,7 +19,7 @@ logger = get_logger(__name__)
 class FundClassParser():
     """Clase de una Serie de Fondo, matcheado con un asset.
     sheet example:
-    | class | fund_name | trading_currency | class_cafci_code | fund_cafci_code | rescue_time | risk_level | tne | monthly_performance | updated | logo_url
+    | class | name | trading_currency | class_cafci_code | fund_cafci_code | rescue_time | risk_level | tne | monthly_performance | updated | logo_url
     """
     SHEET = "funds"
     COLUMN_MAX_RANGE = "A1:K"
@@ -90,6 +90,7 @@ class FundClassParser():
             class_id = fund_group_data.get('id')
             fund_id = fund.get('id')
             updated = get_current_time()
+            class_name = fund.get('nombre')
 
             logger.info("Trayendo data de clase_id %s", class_id)
 
@@ -99,17 +100,17 @@ class FundClassParser():
 
             self.validated_cafci_response(cafci_fund_response)
 
-            fund_name = cafci_fund_response.json()["data"].get("model").get("nombre")
+            name = cafci_fund_response.json()["data"].get("model").get("nombre")
             trading_currency = cafci_fund_response.json()["data"].get("model").get("moneda")
             rescue_time = cafci_fund_response.json()["data"].get("model").get("plazoRescate")
             risk_level = cafci_fund_response.json()["data"].get("model").get("nivelRiesgo")
 
             # Crear datos de fondo para la request a nuestra API
 
-            logger.info(f'Creando data de fondo/codigo: {class_id}/{fund_name}')
+            logger.info(f'Creando data de fondo/codigo: {class_id}/{name}')
 
-            # Crear data de fondo ejemplo: [class_id, fund_name, trading_currency, class_cafci_code, fund_cafci_code, rescue_time, risk_level, tne, monthly_performance, updated, logo_url]
-            fund_class_data = [class_id, fund_name, trading_currency, class_id, fund_id, rescue_time, risk_level, None, None, updated, None]
+            # Crear data de fondo ejemplo: [class_name, fund_name, trading_currency, class_cafci_code, fund_cafci_code, rescue_time, risk_level, tem, monthly_performance, updated, logo_url]
+            fund_class_data = [class_name, name, trading_currency, class_id, fund_id, rescue_time, risk_level, None, None, updated, None]
 
             fund_classes.append(fund_class_data)
 

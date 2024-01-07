@@ -81,7 +81,7 @@ class APISpreadsheet:
         for fund in response:
             new = {
                 "class": fund[0],
-                "fund_name": fund[1],
+                "name": fund[1],
                 "trading_currency": fund[2],
                 "fund_cafci_code": fund[4],
                 "rescue_time": fund[5],
