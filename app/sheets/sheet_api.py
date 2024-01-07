@@ -3,7 +3,7 @@ from googleapiclient.discovery import build
 from google.oauth2 import service_account
 
 
-from ...common.utils import (
+from ..common.utils import (
     get_logger,
     get_current_time,
 )

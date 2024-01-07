@@ -11,12 +11,12 @@ from decimal import (
 import logging
 from pytz import timezone as pytz_timezone
 
-from common.constants import (
+from .constants import (
     DECIMAL_ZERO,
     TIME_ZONE,
     DECIMAL_DIGIT_AMOUNT,
 )
-from common.exceptions import ParameterError
+from .exceptions import ParameterError
 
 
 def get_logger(name):

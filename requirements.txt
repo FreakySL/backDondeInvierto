@@ -4,6 +4,7 @@ pytest==6.2.4
 pytest-cov==3.0.0
 factory-boy==3.2.1
 pytest-mock==3.6.1
+pytz==2023.3
 
 # logs
 loggly-python-handler==1.0.1

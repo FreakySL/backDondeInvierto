@@ -1,4 +1,4 @@
-from .sheets.sheet_api_2 import SheetAPI
+from .sheets.sheet_api import APISpreadsheet
 
 if __name__ == '__main__':
-    con = SheetAPI()
+    con = APISpreadsheet()
