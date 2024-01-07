@@ -59,7 +59,7 @@ class APISpreadsheet:
                 "logo_url": fund[10],
             }
 
-            dictionary[x[3]] = new
+            dictionary[fund[3]] = new
 
         return dictionary
 
