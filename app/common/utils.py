@@ -228,7 +228,7 @@ def validate_option(opcion):
             print("Error: Debes ingresar 1 o 2. Intenta nuevamente.")
             opcion = input("Ingresa 1 o 2: ")
         else:
-            return
+            return opcion
 
 
 def parse_array_list_to_single_list(array_list):
