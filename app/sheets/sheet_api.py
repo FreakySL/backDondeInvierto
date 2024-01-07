@@ -15,7 +15,7 @@ logger = get_logger(__name__)
 class APISpreadsheet:
 
     SCOPES = ['https://www.googleapis.com/auth/spreadsheets']
-    KEY = 'app/sheets/key.json'
+    KEY = 'key.json'
     SPREADSHEET_ID = '1EDfxFQA4ncCaRl6G45oyufY8KNhiuFuGRbTb-JGsLzg'
     GOOGLE_API = "sheets"
     GOOGLE_API_VERSION = "v4"
