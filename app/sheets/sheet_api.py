@@ -64,21 +64,21 @@ class APISpreadsheet:
     def response_to_dicctionary(self, response):
         dictionary = {}
 
-        for x in response:
+        for fund in response:
             new = {
-                "class": x[0],
-                "fund_name": x[1],
-                "trading_currency": x[2],
-                "fund_cafci_code": x[4],
-                "rescue_time": x[5],
-                "risk_level": x[6],
-                "tem": x[7],
-                "monthly_performance": x[8],
-                "updated": x[9],
-                "logo_url": x[10],
+                "class": fund[0],
+                "fund_name": fund[1],
+                "trading_currency": fund[2],
+                "fund_cafci_code": fund[4],
+                "rescue_time": fund[5],
+                "risk_level": fund[6],
+                "tem": fund[7],
+                "monthly_performance": fund[8],
+                "updated": fund[9],
+                "logo_url": fund[10],
             }
 
-            dictionary[x[3]] = new
+            dictionary[fund[3]] = new
 
         return dictionary
 

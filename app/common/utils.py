@@ -220,3 +220,9 @@ def date_or_today(__date=None):
         logger.error(err_msg)
         raise ParameterError(err_msg)
     return __date
+
+def validate_option(opcion):
+    while (opcion != 1 and opcion != 2):
+        print("Error: Debes ingresar 1 o 2. Intenta nuevamente.")
+        opcion = int(input("Ingresa 1 o 2: "))
+    return
