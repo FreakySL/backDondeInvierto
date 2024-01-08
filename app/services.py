@@ -36,18 +36,13 @@ def create_initial_funds_database():
     # Get all funds from cafci
     all_fund_classes = parser.get_all_funds()
 
-    # Divide the funds data in 10 chunks
-    logger.info("Dividing the funds data in 10 chunks")
-    chunks = [all_fund_classes[x:x + 10] for x in range(0, len(all_fund_classes), 10)]
-
     # Create the initial database
     logger.info("Creating the initial database")
 
-    for chunk in chunks:
-        sheet.post_data(
-            values=chunk,
-            sheet_name=parser.get_sheet(),
-        )
+    sheet.post_data(
+        values=all_fund_classes,
+        sheet_name=parser.get_sheet(),
+    )
 
     end_time = time.time()  # End time annotation
     elapsed_time = end_time - start_time
@@ -69,15 +64,14 @@ def update_funds_database():
     # Get all funds from our database
     sheet = APISpreadsheet()
     parser = FundClassParser()
-    now = get_current_time().strftime("%d-%m-%Y %H:%M:%S")
+    now = get_current_time().strftime("%d-%m-%Y")
 
     # Get all fund groups from sheet
     funds_cafci_codes = sheet.get_data(sheet_name=parser.get_sheet(), _range=parser.get_fund_codes_range())
 
     new_data = []
-
     for fund_code in funds_cafci_codes:
-        logger.info("Getting data from fund code %s", fund_code)
+        logger.info("Getting data from class id %s and fund id %s", fund_code[0], fund_code[1])
         # Get the TEM for the fund
         first_price, last_price = parser.get_seven_days_price(class_id=fund_code[0], fund_id=fund_code[1])
 
@@ -88,7 +82,7 @@ def update_funds_database():
         monthly_performance = parser.get_last_monthly_performance(class_id=fund_code[0], fund_id=fund_code[1])
 
         # Append the tem and monthly performance to the new data
-        new_data.append([tem, monthly_performance, now])
+        new_data.append([str(tem), str(monthly_performance), now])
 
     # Update the sheet database
     logger.info("Updating sheet database")

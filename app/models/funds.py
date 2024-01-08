@@ -1,6 +1,9 @@
+import math
+import time
 from datetime import timedelta
 import json
 import requests
+from requests.exceptions import ConnectionError
 from decimal import Decimal
 from multiprocessing import (
     Pool,
@@ -10,10 +13,32 @@ from ..common.utils import (
     get_logger,
     get_current_time,
     normalize_decimals,
+    get_last_friday,
 )
 
 
 logger = get_logger(__name__)
+
+
+RISK_LEVEL_DIC = {
+    "Corto Plazo": 0,
+    "Mediano Plazo": 1,
+    "Largo Plazo": 2,
+    "Flexible": 2,
+}
+
+RESCUE_TIME_DIC = {
+    "4": 0,  # Mercado de Dinero
+    "3": 24,  # Renta Fija
+    "2": 48,  # Renta Variable
+    "5": 48,  # Renta Mixta
+    "7": 48,  # Retorno Total
+    "6": 48,  # Pymes
+    "8": 48,  # Infraestructura
+    "Otras": 48,
+}
+
+MAX_RETRIES = 5  # Make this a configurable parameter
 
 
 class FundClassParser():
@@ -48,8 +73,9 @@ class FundClassParser():
         if initial_price is None or final_price is None:
             return None
 
-        tem = ((final_price - initial_price) / initial_price) * 100 * 4  # 4 is the number of periods in a month
+        tem = ((final_price - initial_price) / initial_price) * 100 * Decimal("4.28")  # 4.28 is the number of periods in a month
 
+        tem = normalize_decimals(tem)
         # Return the TEM
         return tem
 
@@ -80,7 +106,7 @@ class FundClassParser():
         return True
 
     def get_all_fund_groups(self):
-        cafci_funds_url = self.BASE_CAFCI_URL + "/fondo?estado=1&include=gerente,tipoRenta,region,benchmark,clase_fondo&limit=0"
+        cafci_funds_url = self.BASE_CAFCI_URL + "/fondo?estado=1&include=gerente,tipoRenta,clase_fondo&limit=0"
         logger.info("Getting all funds from cafci")
         response = requests.get(cafci_funds_url)
 
@@ -91,33 +117,40 @@ class FundClassParser():
 
         return parsed_response
 
-    def get_fund_classes_by_fund_group(self, fund_group_data):
+    def get_fund_classes_by_fund_group(self, fund_group_data: dict):
         fund_classes = []
+        fund_id = fund_group_data.get('id')
+        rescue_time = fund_group_data.get('tipoRenta').get('id')  # "3"
+        # Format the rescue time to obtain the rescue time id, example: "3" -> 24
+        rescue_time = RESCUE_TIME_DIC.get(rescue_time)  # 24
+
+        risk_level = fund_group_data.get('horizonteViejo')  # "Corto Plazo"
+        # Format the rescue time to obtain the rescue time id, example: "Corto Plazo" -> 0
+        risk_level = RISK_LEVEL_DIC.get(risk_level)  # 0
+
+        trading_currency = fund_group_data.get("monedaId")  # "1"
+        # Format the trading currency to obtain the currency name, example: 1 -> ARS | 2 -> USD
+        trading_currency = "ARS" if trading_currency == "1" else "USD"
+
+        if trading_currency == "USD" and rescue_time == 0:
+            rescue_time = 24
+
+        name = fund_group_data.get("nombre")
+        updated = get_current_time().strftime("%d-%m-%Y")
+
         for fund in fund_group_data.get("clase_fondos"):
-            class_id = fund_group_data.get('id')
-            fund_id = fund.get('id')
-            updated = get_current_time()
-            class_name = fund.get('nombre')
+            class_id = fund.get('id')
+            class_name = fund.get('nombre')  # ST Zero - Clase D
+            # Format the name to obtain the class name, example: D
+            class_name_formated = class_name.split(" ")[-1]  # D
 
-            logger.info("Trayendo data de clase_id %s", class_id)
-
-            cafci_fund_response = requests.get(
-                f"{self.BASE_CAFCI_URL}/fondo/{class_id}/clase/{fund_id}/ficha"
-            )
-
-            self.validated_cafci_response(cafci_fund_response)
-
-            name = cafci_fund_response.json()["data"].get("model").get("nombre")
-            trading_currency = cafci_fund_response.json()["data"].get("model").get("moneda")
-            rescue_time = cafci_fund_response.json()["data"].get("model").get("plazoRescate")
-            risk_level = cafci_fund_response.json()["data"].get("model").get("nivelRiesgo")
-
-            # Crear datos de fondo para la request a nuestra API
+            if len(class_name_formated) > 1:
+                class_name_formated = None
 
             logger.info(f'Creando data de fondo/codigo: {class_id}/{name}')
 
             # Crear data de fondo ejemplo: [class_name, fund_name, trading_currency, class_cafci_code, fund_cafci_code, rescue_time, risk_level, tem, monthly_performance, updated, logo_url]
-            fund_class_data = [class_name, name, trading_currency, class_id, fund_id, rescue_time, risk_level, None, None, updated, None]
+            fund_class_data = [class_name_formated, name, trading_currency, class_id, fund_id, rescue_time, risk_level, None, None, updated, None]
 
             fund_classes.append(fund_class_data)
 
@@ -139,33 +172,43 @@ class FundClassParser():
         """
         cafci_performance_url = f"{self.BASE_CAFCI_URL}/fondo/{class_id}/clase/{fund_id}/rendimiento/"
 
-        today = get_current_time()
+        today = get_last_friday()
         one_week_ago = today - timedelta(days=7)
 
-        params = f"{today.strftime('%Y-%m-%d')}/{one_week_ago.strftime('%Y-%m-%d')}"
+        params = f"{one_week_ago.strftime('%Y-%m-%d')}/{today.strftime('%Y-%m-%d')}"
         cafci_performance_url = cafci_performance_url + params
 
+        response = None
         logger.info("Getting cafci performance from %s", cafci_performance_url)
+        for i in range(MAX_RETRIES):
+            try:
+                cafci_response = requests.get(cafci_performance_url)
+                response = cafci_response.json()
+                break
 
-        try:
+            except ConnectionError as e:
+                wait_time = 60 * i  # Exponential backoff
+                logger.warning(f"ConnectionError: {e}. Retrying in {wait_time} seconds.")
+                time.sleep(wait_time)
 
-            cafci_response = requests.get(cafci_performance_url)
-            response = json.loads(cafci_response.data.decode('utf-8'))
-
-            has_errors = response.get('error')  # Possible errors are 'wrong-dates' and 'inexistence'
-            if has_errors:
-                logger.debug(f"Wrong dates for {class_id}/{fund_id} in cafci")
+            except Exception as e:
+                logger.error("Error getting cafci performance: %s - status code: %s", e, cafci_response.status_code)
                 return None, None
 
-            returned_elems = response.get('data')
-
-        except Exception as e:
-            logger.error("Error getting cafci performance: %s - status code: %s", e, cafci_response.status_code)
+        if response is None:
+            logger.error(f"Error getting cafci performance after {MAX_RETRIES} retries")
             return None, None
 
+        has_errors = response.get('error')  # Possible errors are 'wrong-dates' and 'inexistence'
+        if has_errors:
+            logger.debug(f"Wrong dates for {class_id}/{fund_id} in cafci")
+            return None, None
+
+        returned_elems = response.get('data')
+
         # Normalize the shares to avoid problems with the decimal field
-        last_price = normalize_decimals(returned_elems.get('desde').get('valor')) / 1000
-        first_price = normalize_decimals(returned_elems.get('hasta').get('valor')) / 1000
+        first_price = normalize_decimals(returned_elems.get('desde').get('valor')) / 1000
+        last_price = normalize_decimals(returned_elems.get('hasta').get('valor')) / 1000
 
         return first_price, last_price
 
@@ -175,32 +218,45 @@ class FundClassParser():
         """
         cafci_performance_url = f"{self.BASE_CAFCI_URL}/fondo/{class_id}/clase/{fund_id}/rendimiento/"
 
-        today = get_current_time()
+        today = get_last_friday()
         one_month_ago = today - timedelta(days=30)
 
-        params = f"{today.strftime('%Y-%m-%d')}/{one_month_ago.strftime('%Y-%m-%d')}"
+        params = f"{one_month_ago.strftime('%Y-%m-%d')}/{today.strftime('%Y-%m-%d')}"
         cafci_performance_url = cafci_performance_url + params
 
         logger.info("Getting cafci performance from %s", cafci_performance_url)
 
-        try:
+        response = None
 
-            cafci_response = requests.get(cafci_performance_url)
-            response = json.loads(cafci_response.data.decode('utf-8'))
+        for i in range(MAX_RETRIES):
+            try:
 
-            has_errors = response.get('error')  # Possible errors are 'wrong-dates' and 'inexistence'
+                cafci_response = requests.get(cafci_performance_url)
+                response = cafci_response.json()
+                break
 
-            if has_errors:
-                logger.debug(f"Wrong dates for {class_id}/{fund_id} in cafci")
-                return None
+            except ConnectionError as e:
+                wait_time = 60 * i  # Exponential backoff
+                logger.warning(f"ConnectionError: {e}. Retrying in {wait_time} seconds.")
+                time.sleep(wait_time)
 
-            returned_elems = response.get('data')
+            except Exception as e:
+                logger.error("Error getting cafci performance: %s", e)
+                break
 
-        except Exception as e:
-            logger.error("Error getting cafci performance: %s - status code: %s", e, cafci_response.status_code)
+        if response is None:
+            logger.error(f"Error getting cafci performance after {MAX_RETRIES} retries")
             return None
 
+        has_errors = response.get('error')  # Possible errors are 'wrong-dates' and 'inexistence'
+
+        if has_errors:
+            logger.debug(f"Wrong dates for {class_id}/{fund_id} in cafci")
+            return None
+
+        returned_elems = response.get('data')
+
         # Normalize the shares to avoid problems with the decimal field
-        monthly_performance = normalize_decimals(returned_elems.get('rendimiento')) / 1000
+        monthly_performance = normalize_decimals(returned_elems.get('rendimiento'))
 
         return monthly_performance

@@ -1,6 +1,7 @@
 from datetime import (
     datetime,
     date,
+    timedelta,
 )
 from decimal import (
     Decimal,
@@ -250,3 +251,12 @@ def parse_array_list_to_single_list(array_list):
     result_list.extend(unique_elements)
 
     return result_list
+
+
+def get_last_friday():
+    """
+    Get the last friday date.
+    """
+    today = datetime.today()
+    last_friday = today - timedelta(days=today.weekday()) + timedelta(days=4, weeks=-1)
+    return last_friday

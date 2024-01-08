@@ -6,7 +6,6 @@ from googleapiclient.errors import HttpError
 
 from ..common.utils import (
     get_logger,
-    get_current_time,
 )
 
 logger = get_logger(__name__)

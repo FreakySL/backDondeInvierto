@@ -132,7 +132,7 @@ class TestFundClassParser():
     def test_get_seven_days_price(self):
         with patch("app.models.funds.FundClassParser.get_seven_days_price") as mock:
             mock.return_value = (Decimal(100), Decimal(110))
-            result = self.parser.get_seven_days_price(class_id="class", fund_id="fund")
+            result = self.parser.get_seven_days_price(class_id="4", fund_id="2")
             expected_result = (Decimal(100), Decimal(110))
 
             self.assertEqual(result, expected_result)
@@ -144,23 +144,86 @@ class TestFundClassParser():
         self.assertEqual(result, expected_result)
 
     def test_cafci_format(self):
-        return True
-        response = self.parser.get_cafci_ficha_default()
+        response = {
+            "clasificacionVieja": "Renta Fija",
+            "regionVieja": "Argentina",
+            "horizonteViejo": "Corto Plazo",
+            "tipoEscision": "No aplicable",
+            "id": "1",
+            "createdAt": "2017-07-07T22:09:18.000Z",
+            "updatedAt": "2021-01-13T16:00:07.000Z",
+            "nombre": "Alianza de Capitales",
+            "codigoCNV": "52",
+            "objetivo": "El objetivo es superar el rendimiento de la tasa BADLAR",
+            "resolucionParticular": "<Faltante>",
+            "fechaResolucionParticular": "1990-01-01T00:00:00.000Z",
+            "fechaInscripcionRPC": "1990-01-01T00:00:00.000Z",
+            "estado": "1",
+            "etapaLiquidacion": None,
+            "tipoRentaId": "3",
+            "monedaId": "1",
+            "regionId": "1",
+            "durationId": "3",
+            "benchmarkId": "9",
+            "mmIndice": False,
+            "mmPuro": False,
+            "valuacion": "M",
+            "ci49": False,
+            "diasLiquidacion": "3",
+            "indice": False,
+            "horizonteId": "1",
+            "sociedadGerenteId": "11",
+            "sociedadDepositariaId": "65",
+            "inicio": "1992-06-22T00:00:00.000Z",
+            "tipoFondoId": "1",
+            "tipoDinero": "No Aplica",
+            "tipoRentaMixtaId": None,
+            "excentoTasa": False,
+            "d569": False,
+            "d569FondoId": None,
+            "fechaCierreBalances": "1900-12-30T04:16:48.000Z",
+            "tipoRenta": {
+                    "id": "3",
+                    "createdAt": "1990-01-01T00:00:00.000Z",
+                    "updatedAt": "1990-01-01T00:00:00.000Z",
+                    "nombre": "Renta Fija",
+                    "codigoCafci": "RF",
+                    "orden": "B  ",
+                    "parametroPorcentual": 5
+                },
+            "clase_fondos": [
+                {
+                    "id": "1",
+                    "createdAt": "2017-07-07T22:09:24.000Z",
+                    "updatedAt": "2017-07-07T22:09:24.000Z",
+                    "nombre": "Alianza de Capitales",
+                    "inversionMinima": "1",
+                    "honorarioIngreso": 0,
+                    "honorarioRescate": 0,
+                    "honorarioTransferencia": 0,
+                    "honorarioAdministracionGerente": 2,
+                    "honorarioAdministracionDepositaria": 0.4,
+                    "gastoOrdinarioGestion": 0,
+                    "honorarioExito": False,
+                    "monedaId": "1",
+                    "rg384": False,
+                    "liquidez": True,
+                    "suscripcion": True,
+                    "reexpresa": False,
+                    "nulo": False,
+                    "tipoClaseId": "1",
+                    "fondoId": "1",
+                    "tickerBloomberg": "ALIACAP   ",
+                    "tickerISIN": None,
+                    "tickerFIGI": None,
+                    "repatriacion": None
+                }
+            ]
+        }
         data = self.parser.get_fund_classes_by_fund_group(response)
 
         expected_data = [
-            [
-                "Clase A",
-                "Cohen Ahorro Pesos",
-                "ARS",
-                "1222",
-                "48hs",
-                "Bajo",
-                "0.00",
-                "0.00",
-                "01-01-2021 00:00:00",
-                "https://www.cafci.org.ar/images/fondos/1222.png",
-            ]
+            ['Capitales', 'Alianza de Capitales', 'ARS', '1', '1', 24, 0, None, None, "08-01-2024", None]
         ]
 
         self.assertEqual(data, expected_data)
