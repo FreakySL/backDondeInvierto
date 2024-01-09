@@ -5,8 +5,10 @@ from .sheets import APISpreadsheet
 from .common.utils import (
     get_logger,
     get_current_time,
-    parse_array_list_to_single_list,
 )
+from multiprocessing import Pool
+from emoji import emojize
+
 
 logger = get_logger(__name__)
 
@@ -59,7 +61,7 @@ def update_funds_database():
 
     # Update the database
 
-    logger.info("Updating database")
+    logger.info(emojize(":rocket: Initializing database update"))
 
     # Get all funds from our database
     sheet = APISpreadsheet()
@@ -68,35 +70,50 @@ def update_funds_database():
 
     # Get all fund groups from sheet
     funds_cafci_codes = sheet.get_data(sheet_name=parser.get_sheet(), _range=parser.get_fund_codes_range())
+    logger.info(f"Got {len(funds_cafci_codes)} funds from sheet")
 
     new_data = []
+    funds_left = len(funds_cafci_codes)
+
+    # Just use the first 8 funds
+    funds_cafci_codes = funds_cafci_codes[:8]
+
     for fund_code in funds_cafci_codes:
-        logger.info("Getting data from class id %s and fund id %s", fund_code[0], fund_code[1])
+        class_id = fund_code[0]
+        fund_id = fund_code[1]
+        logger.info(emojize(f":hourglass_not_done: Funds left: {funds_left}, Getting cafci data from class id {class_id} and fund id {fund_id}"))
         # Get the TEM for the fund
-        first_price, last_price = parser.get_seven_days_price(class_id=fund_code[0], fund_id=fund_code[1])
+        first_price, last_price = parser.get_seven_days_price(class_id=class_id, fund_id=fund_id)
 
         # Append the TEM to the new data
         tem = parser.get_tem(first_price, last_price)
 
         # Now get the monthly performance
-        monthly_performance = parser.get_last_monthly_performance(class_id=fund_code[0], fund_id=fund_code[1])
+        monthly_performance = parser.get_last_monthly_performance(class_id=class_id, fund_id=fund_id)
 
         # Append the tem and monthly performance to the new data
         new_data.append([str(tem), str(monthly_performance), now])
+        # Update the funds left counter
+        funds_left -= 1
 
     # Update the sheet database
-    logger.info("Updating sheet database")
-
-    sheet.update_data(
-        values=new_data,
-        sheet_name=parser.get_sheet(),
-        _range=parser.get_tem_monthly_updated_range(),
-    )
+    logger.info(emojize(":rocket: Updating sheet database"))
+    try:
+        sheet.reload()
+        sheet.update_data(
+            values=new_data,
+            sheet_name=parser.get_sheet(),
+            _range=parser.get_tem_monthly_updated_range(),
+        )
+    except Exception as e:
+        logger.error(emojize(f":warning: Error updating sheet database: {e}"))
+        import ipdb
+        ipdb.set_trace()
 
     end_time = time.time()  # End time annotation
     elapsed_time = end_time - start_time
-    logger.info("Database updated")
-    logger.info(f"Elapsed time: {elapsed_time} seconds")
+    logger.info(emojize(":check_mark_button: Database updated"))
+    logger.info(emojize(f":stopwatch: Elapsed time: {elapsed_time} seconds"))
 
 
 def search_fund_by_name():

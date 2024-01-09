@@ -26,6 +26,11 @@ class APISpreadsheet:
         self.service = build(self.GOOGLE_API, self.GOOGLE_API_VERSION, credentials=self.creds)
         self.sheet = self.service.spreadsheets()
 
+    def reload(self):
+        self.creds = service_account.Credentials.from_service_account_file(self.KEY, scopes=self.SCOPES)
+        self.service = build(self.GOOGLE_API, self.GOOGLE_API_VERSION, credentials=self.creds)
+        self.sheet = self.service.spreadsheets()
+
     def get_data(self, sheet_name="funds", _range="A1:K"):
         try:
             result = self.sheet.values().get(

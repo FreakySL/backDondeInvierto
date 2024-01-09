@@ -50,7 +50,7 @@ class FundClassParser():
     COLUMN_MAX_RANGE = "A1:K"
     BASE_CAFCI_URL = "https://api.cafci.org.ar"
     FUND_CODES_CELL_RANGE = "D2:E"
-    TEM_MONTHLY_UPDATED_RANGE = "H2:I"
+    TEM_MONTHLY_UPDATED_RANGE = "H2:J"
 
     # Create the init
     def __init__(self,):
@@ -75,7 +75,7 @@ class FundClassParser():
 
         tem = ((final_price - initial_price) / initial_price) * 100 * Decimal("4.28")  # 4.28 is the number of periods in a month
 
-        tem = normalize_decimals(tem)
+        tem = normalize_decimals(tem, 2)
         # Return the TEM
         return tem
 
@@ -170,7 +170,7 @@ class FundClassParser():
         """
         Get the first and last price of the last seven days.
         """
-        cafci_performance_url = f"{self.BASE_CAFCI_URL}/fondo/{class_id}/clase/{fund_id}/rendimiento/"
+        cafci_performance_url = f"{self.BASE_CAFCI_URL}/fondo/{fund_id}/clase/{class_id}/rendimiento/"
 
         today = get_last_friday()
         one_week_ago = today - timedelta(days=7)
@@ -216,7 +216,7 @@ class FundClassParser():
         """
         Get the last monthly performance.
         """
-        cafci_performance_url = f"{self.BASE_CAFCI_URL}/fondo/{class_id}/clase/{fund_id}/rendimiento/"
+        cafci_performance_url = f"{self.BASE_CAFCI_URL}/fondo/{fund_id}/clase/{class_id}/rendimiento/"
 
         today = get_last_friday()
         one_month_ago = today - timedelta(days=30)
@@ -257,6 +257,6 @@ class FundClassParser():
         returned_elems = response.get('data')
 
         # Normalize the shares to avoid problems with the decimal field
-        monthly_performance = normalize_decimals(returned_elems.get('rendimiento'))
+        monthly_performance = normalize_decimals(returned_elems.get('rendimiento'), 2)
 
         return monthly_performance
