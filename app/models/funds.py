@@ -19,23 +19,15 @@ from ..common.utils import (
 
 logger = get_logger(__name__)
 
-
-RISK_LEVEL_DIC = {
-    "Corto Plazo": 0,
-    "Mediano Plazo": 1,
-    "Largo Plazo": 2,
-    "Flexible": 2,
-}
-
-RESCUE_TIME_DIC = {
+RISK_LEVEL_DICT = {
     "4": 0,  # Mercado de Dinero
-    "3": 24,  # Renta Fija
-    "2": 48,  # Renta Variable
-    "5": 48,  # Renta Mixta
-    "7": 48,  # Retorno Total
-    "6": 48,  # Pymes
-    "8": 48,  # Infraestructura
-    "Otras": 48,
+    "3": 1,  # Renta Fija
+    "2": 2,  # Renta Variable
+    "5": 2,  # Renta Mixta
+    "7": 1,  # Retorno Total
+    "6": 2,  # Pymes
+    "8": 2,  # Infraestructura
+    "Otros": 2,
 }
 
 MAX_RETRIES = 5  # Make this a configurable parameter
@@ -120,13 +112,13 @@ class FundClassParser():
     def get_fund_classes_by_fund_group(self, fund_group_data: dict):
         fund_classes = []
         fund_id = fund_group_data.get('id')
-        rescue_time = fund_group_data.get('tipoRenta').get('id')  # "3"
-        # Format the rescue time to obtain the rescue time id, example: "3" -> 24
-        rescue_time = RESCUE_TIME_DIC.get(rescue_time)  # 24
+        rescue_time = int(fund_group_data.get('diasLiquidacion')) * 24  # 3 * 24 = 72
+        if rescue_time > 72:
+            rescue_time = 72
 
-        risk_level = fund_group_data.get('horizonteViejo')  # "Corto Plazo"
+        risk_level = fund_group_data.get('tipoRenta').get('id', "Otros")  # "1"
         # Format the rescue time to obtain the rescue time id, example: "Corto Plazo" -> 0
-        risk_level = RISK_LEVEL_DIC.get(risk_level)  # 0
+        risk_level = RISK_LEVEL_DICT.get(risk_level, 2)  # 0
 
         trading_currency = fund_group_data.get("monedaId")  # "1"
         # Format the trading currency to obtain the currency name, example: 1 -> ARS | 2 -> USD
@@ -146,6 +138,9 @@ class FundClassParser():
 
             if len(class_name_formated) > 1:
                 class_name_formated = None
+
+            if class_name_formated != "A":
+                continue
 
             logger.info(f'Creando data de fondo/codigo: {class_id}/{name}')
 
@@ -201,8 +196,8 @@ class FundClassParser():
 
         has_errors = response.get('error')  # Possible errors are 'wrong-dates' and 'inexistence'
         if has_errors:
-            logger.debug(f"Wrong dates for {class_id}/{fund_id} in cafci")
-            return None, None
+            logger.warning(f"Wrong dates for {fund_id}/{class_id} in cafci")
+            return 0, 0
 
         returned_elems = response.get('data')
 
@@ -251,8 +246,8 @@ class FundClassParser():
         has_errors = response.get('error')  # Possible errors are 'wrong-dates' and 'inexistence'
 
         if has_errors:
-            logger.debug(f"Wrong dates for {class_id}/{fund_id} in cafci")
-            return None
+            logger.debug(f"{has_errors} for {class_id}/{fund_id} in cafci")
+            return 0
 
         returned_elems = response.get('data')
 
