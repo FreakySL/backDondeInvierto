@@ -31,7 +31,7 @@ class APISpreadsheet:
         self.service = build(self.GOOGLE_API, self.GOOGLE_API_VERSION, credentials=self.creds)
         self.sheet = self.service.spreadsheets()
 
-    def get_data(self, sheet_name="funds", _range="A1:K"):
+    def get_data(self, sheet_name="funds", _range="A1:L"):
         try:
             result = self.sheet.values().get(
                 spreadsheetId=self.SPREADSHEET_ID,
@@ -94,10 +94,12 @@ class APISpreadsheet:
                 "fund_cafci_code": fund[4],
                 "rescue_time": fund[5],
                 "risk_level": fund[6],
-                "tem": fund[7],
-                "monthly_performance": fund[8],
-                "updated": fund[9],
-                "logo_url": fund[10],
+                "tna": fund[7],
+                "tea": fund[8],
+                "tem": fund[9],
+                "monthly_performance": fund[10],
+                "updated": fund[11],
+                "logo_url": fund[12],
             }
 
             dictionary[fund[3]] = new

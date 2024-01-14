@@ -225,9 +225,9 @@ def date_or_today(__date=None):
 
 def validate_option(opcion):
     while True:
-        if (opcion != '1' and opcion != '2' and opcion != '3'):
-            print("Error: Debes ingresar 1 o 2 o 3")
-            opcion = input("Ingresa 1 o 2 o 3: ")
+        if (opcion != '1' and opcion != '2' and opcion != '3' and opcion != '4'):
+            print("Error: Debes ingresar 1 o 2 o 3 o 4")
+            opcion = input("Ingresa 1 o 2 o 3 o 4: ")
         else:
             return opcion
 
