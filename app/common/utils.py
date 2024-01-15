@@ -257,6 +257,7 @@ def get_last_friday():
     """
     Get the last friday date.
     """
-    today = datetime.today()
-    last_friday = today - timedelta(days=today.weekday()) + timedelta(days=4, weeks=-1)
+    today = date.today()
+    offset = (today.weekday() - 4) % 7
+    last_friday = today - timedelta(days=offset)
     return last_friday
