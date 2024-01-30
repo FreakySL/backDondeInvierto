@@ -1,7 +1,7 @@
 # backDondeInvierto
 
 # Create the env
-python3 -m venv venv 
+python -m venv venv 
 <!-- Comment -->
 the minimun version of python 3.11.5
 

@@ -1,3 +1,7 @@
+from decimal import (
+    Decimal,
+    InvalidOperation,
+)
 import time
 
 from .models import FundClassParser
@@ -112,6 +116,9 @@ def update_funds_database():
     logger.info(emojize(":check_mark_button: Database updated"))
     logger.info(emojize(f":stopwatch: Elapsed time: {elapsed_time} seconds"))
 
+    # Check the database integrity
+    check_database_integrity()
+
 
 def calc_data_by_fund(fund_code: list) -> list:
     """
@@ -172,4 +179,94 @@ def search_fund_by_name():
             return funds[fund]
 
     logger.info("Fund %s not found", fund_name)
+    return None
+
+
+def check_field_is_decimal(field: str) -> bool:
+    """
+    Check if a field is a decimal.
+    """
+    try:
+        Decimal(field)
+        return True
+    except InvalidOperation:
+        return False
+
+
+def check_database_integrity():
+    """
+    Check the database integrity.
+    """
+    logger.info(emojize(":rocket: Initializing database integrity check"))
+    start_time = time.time()  # Start time annotation
+    sheet = APISpreadsheet()
+    parser = FundClassParser()
+    list_start = 2
+
+    # Get all funds from our database
+    funds = sheet.get_data(sheet_name=parser.get_sheet(), _range=parser.get_max_range())
+    funds_formatted = sheet.response_to_dicctionary(funds)
+    logger.info("Got %s funds from sheet", len(funds_formatted))
+
+    # Check every fund fields are not empty or have the incorrect format
+    # loop the fund and the index
+    for index, fund in enumerate(funds_formatted):
+        has_error = False
+        fund_name = fund.get("name")
+        fund_class_code = fund.get("fund_class_cafci_code")
+        fund_code = fund.get("fund_cafci_code")
+        tna = fund.get("tna")  # Need to be a float or Decimal
+        tea = fund.get("tea")  # Need to be a float or Decimal
+        tem = fund.get("tem")  # Need to be a float or Decimal
+        monthly_performance = fund.get("monthly_performance")  # Need to be a float or Decimal
+        six_month_performance = fund.get("six_month_performance")  # Need to be a float or Decimal
+        year_performance = fund.get("year_performance")  # Need to be a float or Decimal
+
+        if not check_field_is_decimal(tna):
+            logger.info("Fund %s has incorrect tna field", fund_name)
+            has_error = True
+
+        if not check_field_is_decimal(tea):
+            logger.info("Fund %s has incorrect tea field", fund_name)
+            has_error = True
+
+        if not check_field_is_decimal(tem):
+            logger.info("Fund %s has incorrect tem field", fund_name)
+            has_error = True
+
+        if not check_field_is_decimal(monthly_performance):
+            logger.info("Fund %s has incorrect monthly_performance field", fund_name)
+            has_error = True
+
+        if not check_field_is_decimal(six_month_performance):
+            logger.info("Fund %s has incorrect six_month_performance field", fund_name)
+            has_error = True
+
+        if not check_field_is_decimal(year_performance):
+            logger.info("Fund %s has incorrect year_performance field", fund_name)
+            has_error = True
+
+        if has_error:
+            real_index = index + list_start
+            logger.info("Fund %s has errors", fund_name)
+            logger.info("Updating fund %s", fund_name)
+            new_data = calc_data_by_fund([fund_class_code, fund_code])
+            logger.info("Updating sheet database")
+            try:
+                sheet.update_data(
+                    values=[new_data, ],
+                    sheet_name=parser.get_sheet(),
+                    _range=f"{parser.TNA_COLUMN}{real_index}:{parser.END_COLUMN}{real_index}",
+                )
+            except Exception as e:
+                logger.error(emojize(f":warning: Error updating sheet database: {e}"))
+                import ipdb
+                ipdb.set_trace()
+
+            logger.info(emojize(f":check_mark_button: Fund {fund_name} updated"))
+
+    end_time = time.time()  # End time annotation
+    elapsed_time = end_time - start_time
+    logger.info(emojize(":check_mark_button: Database integrity checked"))
+    logger.info(emojize(f":stopwatch: Elapsed time: {elapsed_time} seconds"))
     return None

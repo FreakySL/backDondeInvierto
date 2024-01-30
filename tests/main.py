@@ -44,7 +44,7 @@ class TestAPISpreadsheet():
                 'risk2', 'tem2', 'performance2', 'updated2', 'logo2']
         ]
 
-        expected_result = {
+        expected_result = [
             "code1": {
                 "class": "class1",
                 "name": "name1",
@@ -69,7 +69,7 @@ class TestAPISpreadsheet():
                 "updated": "updated2",
                 "logo_url": "logo2"
             }
-        }
+        ]
 
         result = self.api.response_to_dicctionary(response)
 

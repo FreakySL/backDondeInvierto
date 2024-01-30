@@ -39,10 +39,13 @@ class FundClassParser():
     | class | name | trading_currency | class_cafci_code | fund_cafci_code | rescue_time | risk_level | tna | tea | tem | monthly_performance | six_months_performance | year_performance | updated | logo_url |
     """
     SHEET = "funds"
-    COLUMN_MAX_RANGE = "A1:N"
+    COLUMN_MAX_RANGE = "A2:N"
     BASE_CAFCI_URL = "https://api.cafci.org.ar"
     FUND_CODES_CELL_RANGE = "D2:E"
     CALC_DATE_RANGE = "H2:N"
+    START_COLUMN = "A"
+    END_COLUMN = "N"
+    TNA_COLUMN = "H"
 
     # Create the init
     def __init__(self,):

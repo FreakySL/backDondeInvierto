@@ -84,13 +84,15 @@ class APISpreadsheet:
         return response.get('updatedCells')
 
     def response_to_dicctionary(self, response):
-        dictionary = {}
+        data = []
 
+        # Exclude the first row
         for fund in response:
             new = {
                 "class": fund[0],
                 "name": fund[1],
                 "trading_currency": fund[2],
+                "fund_class_cafci_code": fund[3],
                 "fund_cafci_code": fund[4],
                 "rescue_time": fund[5],
                 "risk_level": fund[6],
@@ -98,13 +100,14 @@ class APISpreadsheet:
                 "tea": fund[8],
                 "tem": fund[9],
                 "monthly_performance": fund[10],
-                "updated": fund[11],
-                "logo_url": fund[12],
+                "six_month_performance": fund[11],
+                "year_performance": fund[12],
+                "updated": fund[13],
             }
 
-            dictionary[fund[3]] = new
+            data.append(new)
 
-        return dictionary
+        return data
 
     def get_all_rows_formated(self):
         response = self.get_data()
@@ -124,10 +127,3 @@ class APISpreadsheet:
                 new_funds_array.append(x)
 
         return new_funds_array
-
-
-def test_format_dict():
-    api = APISpreadsheet()
-    response = api.get_data()
-    dictionary = api.response_to_dicctionary(response)
-    logger.info(dictionary)
