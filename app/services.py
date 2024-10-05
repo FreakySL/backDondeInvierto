@@ -139,7 +139,10 @@ def calc_data_by_fund(fund_code: list) -> list:
         tna = 0
         tea = 0
     else:
-        tem, tna, tea = parser.get_proyection(initial_price=first_price, final_price=last_price)
+        tem, tna, tea = parser.get_proyection(
+            initial_price=Decimal(str(first_price)),
+            final_price=Decimal(str(last_price))
+        )
 
     # Now get the monthly performance
     monthly_performance = parser.get_performance_by_range(class_id=class_id, fund_id=fund_id, date_range=30)

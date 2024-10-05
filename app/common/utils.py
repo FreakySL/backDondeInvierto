@@ -140,20 +140,24 @@ def normalize_decimals(value, decimals_to_round=8, method=ROUND_DOWN):
     param method: str (?), round method to use. not used so far.
     """
     new_value = value
+    try:
+        if value is None:
+            return DECIMAL_ZERO
 
-    if value is None:
-        return DECIMAL_ZERO
+        if not isinstance(value, str) and not isinstance(value, Decimal):
+            value = str(value)
 
-    if not isinstance(value, str) and not isinstance(value, Decimal):
-        value = str(value)
+        if not isinstance(value, Decimal):
+            new_value = Decimal(value)
 
-    if not isinstance(value, Decimal):
-        new_value = Decimal(value)
+        decimals = Decimal(f'0.{"0" * decimals_to_round}')
+        with localcontext() as ctx:
+            ctx.rounding = method
+            new_value = new_value.quantize(decimals)
+    except InvalidOperation:
+        logger.warn("Could not normalize '%s' into Decimal", value)
+        new_value = DECIMAL_ZERO
 
-    decimals = Decimal(f'0.{"0" * decimals_to_round}')
-    with localcontext() as ctx:
-        ctx.rounding = method
-        new_value = new_value.quantize(decimals)
     return new_value
 
 
